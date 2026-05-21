@@ -19,7 +19,11 @@ app.use(express.json());
 const tools = [
   { name: "get_ad_accounts", description: "Get all Meta ad accounts", inputSchema: { type: "object", properties: {}, required: [] } },
   { name: "get_ad_campaigns", description: "Get campaigns for an ad account", inputSchema: { type: "object", properties: { account_id: { type: "string" } }, required: ["account_id"] } },
-  { name: "get_ad_insights", description: "Get performance insights for an ad account", inputSchema: { type: "object", properties: { account_id: { type: "string" }, date_preset: { type: "string" } }, required: ["account_id"] } },
+  {
+    name: "get_ad_insights",
+    description: "Get performance insights including conversions, purchases, ROAS, AOV, add to cart, checkouts, link clicks",
+    inputSchema: { type: "object", properties: { account_id: { type: "string" }, date_preset: { type: "string" } }, required: ["account_id"] }
+  },
   { name: "get_my_pages", description: "Get all Facebook Pages", inputSchema: { type: "object", properties: {}, required: [] } },
   { name: "get_page_insights", description: "Get insights for a Facebook Page", inputSchema: { type: "object", properties: { page_id: { type: "string" } }, required: ["page_id"] } },
   { name: "get_page_posts", description: "Get recent posts from a Facebook Page", inputSchema: { type: "object", properties: { page_id: { type: "string" } }, required: ["page_id"] } },
@@ -37,7 +41,17 @@ async function run(name, args) {
       case "get_ad_campaigns":
         res = await axios.get(`${BASE_URL}/act_${args.account_id}/campaigns`, { params: { access_token: ACCESS_TOKEN, fields: "id,name,status,objective,daily_budget,lifetime_budget" } }); break;
       case "get_ad_insights":
-        res = await axios.get(`${BASE_URL}/act_${args.account_id}/insights`, { params: { access_token: ACCESS_TOKEN, date_preset: args.date_preset || "last_7d", fields: "impressions,clicks,spend,reach,ctr,cpc,cpm" } }); break;
+        res = await axios.get(`${BASE_URL}/act_${args.account_id}/insights`, {
+          params: {
+            access_token: ACCESS_TOKEN,
+            date_preset: args.date_preset || "last_7d",
+            fields: [
+              "impressions","clicks","spend","reach","ctr","cpc","cpm",
+              "actions","action_values","purchase_roas",
+              "outbound_clicks"
+            ].join(",")
+          }
+        }); break;
       case "get_my_pages":
         res = await axios.get(`${BASE_URL}/me/accounts`, { params: { access_token: ACCESS_TOKEN, fields: "id,name,category,fan_count,followers_count" } }); break;
       case "get_page_insights":
@@ -72,5 +86,4 @@ app.post("/mcp", async (req, res) => {
 });
 
 app.get("/", (req, res) => res.send("✅ Meta MCP Server is running! Endpoint: POST /mcp"));
-
 app.listen(process.env.PORT || 3000, () => console.log(`🚀 Running on port ${process.env.PORT || 3000}`));

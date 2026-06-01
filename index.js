@@ -216,6 +216,32 @@ app.post("/mcp", async (req, res) => {
   }
   return res.json({ jsonrpc: "2.0", id, error: { code: -32601, message: "Method not found" } });
 });
+import crypto from "crypto";
 
+app.post("/track-order", async (req, res) => {
+  const { pixelId, accessToken, name, phone, product, value } = req.body;
+  if (!pixelId || !accessToken || !phone || !value) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+  const hashedPhone = crypto.createHash("sha256").update(phone.replace(/\D/g, "")).digest("hex");
+  try {
+    const response = await axios.post(
+      `${BASE_URL}/${pixelId}/events?access_token=${accessToken}`,
+      {
+        data: [{
+          event_name: "Purchase",
+          event_time: Math.floor(Date.now() / 1000),
+          event_id: "order_" + Date.now(),
+          action_source: "other",
+          user_data: { ph: [hashedPhone] },
+          custom_data: { value: parseFloat(value), currency: "EGP", content_name: product, content_type: "product" }
+        }]
+      }
+    );
+    res.json({ success: true, events_received: response.data.events_received });
+  } catch (e) {
+    res.status(500).json({ error: e.response?.data || e.message });
+  }
+});
 app.get("/", (req, res) => res.send("✅ Meta MCP Server is running! Endpoint: POST /mcp"));
 app.listen(process.env.PORT || 3000, () => console.log(`🚀 Running on port ${process.env.PORT || 3000}`));

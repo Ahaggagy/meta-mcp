@@ -1,0 +1,18 @@
+{
+  "name": "meta-mcp-server",
+  "version": "2.0.0",
+  "description": "Custom Meta Ads MCP server for 360 Nutrition - insights, campaign management, and CAPI order tracking",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "express": "^4.21.0",
+    "zod": "^3.24.0"
+  }
+}
